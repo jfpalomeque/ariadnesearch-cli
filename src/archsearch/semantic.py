@@ -7,8 +7,12 @@ from pydantic import BaseModel, Field
 from archsearch.ariadne import AriadneClient
 
 
+PORTAL_RESOURCE_URL = "https://portal.ariadne-infrastructure.eu/resource"
+
+
 class CandidateRecord(BaseModel):
     id: str
+    portal_url: str
     title: str | None = None
     description: str | None = None
     resource_type: str | None = None
@@ -60,6 +64,7 @@ def _normalise_hit(hit: dict[str, Any], matched_term: str) -> CandidateRecord:
 
     return CandidateRecord(
         id=hit["id"],
+        portal_url=f"{PORTAL_RESOURCE_URL}/{hit['id']}",
         title=title.get("text"),
         description=description.get("text"),
         resource_type=data.get("resourceType"),

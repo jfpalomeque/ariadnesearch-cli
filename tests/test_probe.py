@@ -7,6 +7,7 @@ from archsearch.semantic import CandidateRecord
 def test_build_output_serialises_candidates() -> None:
     candidate = CandidateRecord(
         id="abc",
+        portal_url="https://portal.ariadne-infrastructure.eu/resource/abc",
         title="Radiocarbon date",
         matched_terms=["radiocarbon"],
         raw={"id": "abc"},
@@ -21,6 +22,7 @@ def test_build_output_serialises_candidates() -> None:
         "candidates": [
             {
                 "id": "abc",
+                "portal_url": "https://portal.ariadne-infrastructure.eu/resource/abc",
                 "title": "Radiocarbon date",
                 "description": None,
                 "resource_type": None,

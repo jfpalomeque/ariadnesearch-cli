@@ -41,6 +41,7 @@ def test_semantic_search_deduplicates_and_records_matched_terms() -> None:
 
     assert len(candidates) == 1
     assert candidates[0].id == "abc"
+    assert candidates[0].portal_url == "https://portal.ariadne-infrastructure.eu/resource/abc"
     assert candidates[0].matched_terms == ["radiocarbon", "C14"]
 
 
@@ -60,6 +61,7 @@ def test_semantic_search_extracts_stable_fields_and_preserves_raw() -> None:
     [candidate] = semantic_search(client, ["radiocarbon"])
 
     assert candidate.title == "A title"
+    assert candidate.portal_url == "https://portal.ariadne-infrastructure.eu/resource/abc"
     assert candidate.description == "A description"
     assert candidate.resource_type == "collection"
     assert candidate.source_identifier == "https://example.test/source"
