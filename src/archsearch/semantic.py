@@ -1,0 +1,69 @@
+from __future__ import annotations
+
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+from archsearch.ariadne import AriadneClient
+
+
+class CandidateRecord(BaseModel):
+    id: str
+    title: str | None = None
+    description: str | None = None
+    resource_type: str | None = None
+    source_identifier: str | None = None
+    matched_terms: list[str] = Field(default_factory=list)
+    raw: dict[str, Any] = Field(default_factory=dict)
+
+
+def semantic_search(
+    client: AriadneClient,
+    terms: list[str],
+    size_per_term: int = 10,
+) -> list[CandidateRecord]:
+    cleaned_terms = [term.strip() for term in terms if term.strip()]
+    if not cleaned_terms:
+        raise ValueError("semantic_search requires at least one non-empty term")
+
+    candidates: dict[str, CandidateRecord] = {}
+
+    for term in cleaned_terms:
+        response = client.search(term, size=size_per_term)
+
+        for hit in response.hits:
+            record_id = hit.get("id")
+            if not isinstance(record_id, str) or not record_id:
+                continue
+
+            if record_id in candidates:
+                candidates[record_id].matched_terms.append(term)
+                continue
+
+            candidates[record_id] = _normalise_hit(hit, term)
+
+    return list(candidates.values())
+
+
+def _normalise_hit(hit: dict[str, Any], matched_term: str) -> CandidateRecord:
+    data = hit.get("data")
+    if not isinstance(data, dict):
+        data = {}
+
+    title = data.get("title")
+    if not isinstance(title, dict):
+        title = {}
+
+    description = data.get("description")
+    if not isinstance(description, dict):
+        description = {}
+
+    return CandidateRecord(
+        id=hit["id"],
+        title=title.get("text"),
+        description=description.get("text"),
+        resource_type=data.get("resourceType"),
+        source_identifier=data.get("identifier"),
+        matched_terms=[matched_term],
+        raw=hit,
+    )
