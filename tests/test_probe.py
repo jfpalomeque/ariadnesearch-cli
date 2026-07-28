@@ -18,6 +18,7 @@ def test_build_output_serialises_candidates() -> None:
     assert output == {
         "query": "radiocarbon",
         "expanded_terms": ["radiocarbon"],
+        "filters": {"resource_type": None},
         "candidate_count": 1,
         "candidates": [
             {
@@ -32,3 +33,9 @@ def test_build_output_serialises_candidates() -> None:
             }
         ],
     }
+
+
+def test_build_output_includes_resource_type_filter() -> None:
+    output = build_output("radiocarbon", ["radiocarbon"], [], resource_type="Date")
+
+    assert output["filters"] == {"resource_type": "Date"}

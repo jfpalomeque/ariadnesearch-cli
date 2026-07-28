@@ -54,6 +54,41 @@ def test_search_preserves_raw_response() -> None:
     assert response.raw == payload
 
 
+def test_search_sends_resource_type_filter_as_ariadne_subject() -> None:
+    seen_request = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal seen_request
+        seen_request = request
+        return httpx.Response(200, json={"total": {}, "hits": [], "aggregations": []})
+
+    client = make_client(handler)
+    client.search("radiocarbon", size=2, resource_type="Date")
+
+    assert seen_request is not None
+    assert dict(seen_request.url.params) == {
+        "q": "radiocarbon",
+        "size": "2",
+        "page": "1",
+        "ariadneSubject": "Date",
+    }
+
+
+def test_search_maps_dating_resource_type_alias_to_date() -> None:
+    seen_request = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal seen_request
+        seen_request = request
+        return httpx.Response(200, json={"total": {}, "hits": [], "aggregations": []})
+
+    client = make_client(handler)
+    client.search("radiocarbon", resource_type="Dating")
+
+    assert seen_request is not None
+    assert seen_request.url.params["ariadneSubject"] == "Date"
+
+
 def test_search_rejects_missing_hits() -> None:
     client = make_client(lambda request: httpx.Response(200, json={"total": {}}))
 

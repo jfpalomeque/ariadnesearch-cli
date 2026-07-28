@@ -25,6 +25,7 @@ def semantic_search(
     client: AriadneClient,
     terms: list[str],
     size_per_term: int = 10,
+    resource_type: str | None = None,
 ) -> list[CandidateRecord]:
     cleaned_terms = [term.strip() for term in terms if term.strip()]
     if not cleaned_terms:
@@ -33,7 +34,7 @@ def semantic_search(
     candidates: dict[str, CandidateRecord] = {}
 
     for term in cleaned_terms:
-        response = client.search(term, size=size_per_term)
+        response = client.search(term, size=size_per_term, resource_type=resource_type)
 
         for hit in response.hits:
             record_id = hit.get("id")

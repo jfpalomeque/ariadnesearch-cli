@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 DEFAULT_BASE_URL = "https://portal.ariadne-infrastructure.eu/api"
+RESOURCE_TYPE_ALIASES = {"dating": "Date"}
 
 
 class AriadneError(Exception):
@@ -40,10 +41,20 @@ class AriadneClient:
         self.base_url = base_url.rstrip("/")
         self._client = client or httpx.Client(timeout=timeout)
 
-    def search(self, query: str, size: int = 10, page: int = 1) -> SearchResponse:
+    def search(
+        self,
+        query: str,
+        size: int = 10,
+        page: int = 1,
+        resource_type: str | None = None,
+    ) -> SearchResponse:
+        params: dict[str, Any] = {"q": query.lower(), "size": size, "page": page}
+        if resource_type:
+            params["ariadneSubject"] = normalise_resource_type(resource_type)
+
         data = self._get_json(
             "/search",
-            params={"q": query.lower(), "size": size, "page": page},
+            params=params,
         )
 
         if not isinstance(data, dict):
@@ -88,3 +99,8 @@ class AriadneClient:
             return response.json()
         except ValueError as exc:
             raise AriadneResponseError(f"ARIADNE returned non-JSON for {url}") from exc
+
+
+def normalise_resource_type(resource_type: str) -> str:
+    stripped = resource_type.strip()
+    return RESOURCE_TYPE_ALIASES.get(stripped.lower(), stripped)

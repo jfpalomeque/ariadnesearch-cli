@@ -9,10 +9,16 @@ from archsearch.semantic import semantic_search
 class FakeClient:
     def __init__(self, responses: dict[str, list[dict]]) -> None:
         self.responses = responses
-        self.calls: list[tuple[str, int]] = []
+        self.calls: list[tuple[str, int, str | None]] = []
 
-    def search(self, query: str, size: int = 10, page: int = 1) -> SearchResponse:
-        self.calls.append((query, size))
+    def search(
+        self,
+        query: str,
+        size: int = 10,
+        page: int = 1,
+        resource_type: str | None = None,
+    ) -> SearchResponse:
+        self.calls.append((query, size, resource_type))
         hits = self.responses.get(query, [])
         return SearchResponse(total={"value": len(hits), "relation": "eq"}, hits=hits)
 
@@ -22,7 +28,20 @@ def test_semantic_search_runs_one_search_per_non_empty_term() -> None:
 
     semantic_search(client, ["radiocarbon", "", " C14 "], size_per_term=3)
 
-    assert client.calls == [("radiocarbon", 3), ("C14", 3)]
+    assert client.calls == [("radiocarbon", 3, None), ("C14", 3, None)]
+
+
+def test_semantic_search_passes_resource_type_to_each_term() -> None:
+    client = FakeClient({"radiocarbon": [], "C14": []})
+
+    semantic_search(
+        client,
+        ["radiocarbon", "C14"],
+        size_per_term=3,
+        resource_type="Date",
+    )
+
+    assert client.calls == [("radiocarbon", 3, "Date"), ("C14", 3, "Date")]
 
 
 def test_semantic_search_deduplicates_and_records_matched_terms() -> None:
