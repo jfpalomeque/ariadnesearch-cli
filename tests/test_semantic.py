@@ -9,7 +9,7 @@ from archsearch.semantic import semantic_search
 class FakeClient:
     def __init__(self, responses: dict[str, list[dict]]) -> None:
         self.responses = responses
-        self.calls: list[tuple[str, int, str | None]] = []
+        self.calls: list[tuple[str, int, int, str | None]] = []
 
     def search(
         self,
@@ -18,7 +18,7 @@ class FakeClient:
         page: int = 1,
         resource_type: str | None = None,
     ) -> SearchResponse:
-        self.calls.append((query, size, resource_type))
+        self.calls.append((query, size, page, resource_type))
         hits = self.responses.get(query, [])
         return SearchResponse(total={"value": len(hits), "relation": "eq"}, hits=hits)
 
@@ -28,7 +28,15 @@ def test_semantic_search_runs_one_search_per_non_empty_term() -> None:
 
     semantic_search(client, ["radiocarbon", "", " C14 "], size_per_term=3)
 
-    assert client.calls == [("radiocarbon", 3, None), ("C14", 3, None)]
+    assert client.calls == [("radiocarbon", 3, 1, None), ("C14", 3, 1, None)]
+
+
+def test_semantic_search_passes_page_to_each_term() -> None:
+    client = FakeClient({"radiocarbon": [], "C14": []})
+
+    semantic_search(client, ["radiocarbon", "C14"], size_per_term=5, page=3)
+
+    assert client.calls == [("radiocarbon", 5, 3, None), ("C14", 5, 3, None)]
 
 
 def test_semantic_search_passes_resource_type_to_each_term() -> None:
@@ -41,7 +49,7 @@ def test_semantic_search_passes_resource_type_to_each_term() -> None:
         resource_type="Date",
     )
 
-    assert client.calls == [("radiocarbon", 3, "Date"), ("C14", 3, "Date")]
+    assert client.calls == [("radiocarbon", 3, 1, "Date"), ("C14", 3, 1, "Date")]
 
 
 def test_semantic_search_deduplicates_and_records_matched_terms() -> None:
@@ -98,3 +106,10 @@ def test_semantic_search_requires_at_least_one_non_empty_term() -> None:
 
     with pytest.raises(ValueError, match="at least one"):
         semantic_search(client, ["", "  "])
+
+
+def test_semantic_search_rejects_page_less_than_one() -> None:
+    client = FakeClient({})
+
+    with pytest.raises(ValueError, match="page must be at least 1"):
+        semantic_search(client, ["radiocarbon"], page=0)

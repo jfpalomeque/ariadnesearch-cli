@@ -14,11 +14,14 @@ def build_output(
     terms: list[str],
     candidates: list[CandidateRecord],
     resource_type: str | None = None,
+    page: int = 1,
+    size_per_term: int = 5,
 ) -> dict[str, Any]:
     return {
         "query": query,
         "expanded_terms": terms,
         "filters": {"resource_type": resource_type},
+        "pagination": {"page": page, "size_per_term": size_per_term},
         "candidate_count": len(candidates),
         "candidates": [candidate.model_dump() for candidate in candidates],
     }
@@ -37,6 +40,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--size", type=int, default=5, help="Results to request per term")
     parser.add_argument(
+        "--page",
+        type=int,
+        default=1,
+        help="ARIADNE result page to request for each term",
+    )
+    parser.add_argument(
         "--resource-type",
         help="ARIADNE resource type filter, e.g. Date or Site/monument",
     )
@@ -50,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
             client,
             terms,
             size_per_term=args.size,
+            page=args.page,
             resource_type=args.resource_type,
         )
     except (AriadneError, ValueError) as exc:
@@ -58,7 +68,14 @@ def main(argv: list[str] | None = None) -> int:
 
     print(
         json.dumps(
-            build_output(args.query, terms, candidates, resource_type=args.resource_type),
+            build_output(
+                args.query,
+                terms,
+                candidates,
+                resource_type=args.resource_type,
+                page=args.page,
+                size_per_term=args.size,
+            ),
             indent=2,
             ensure_ascii=False,
         )

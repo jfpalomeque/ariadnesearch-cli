@@ -25,16 +25,24 @@ def semantic_search(
     client: AriadneClient,
     terms: list[str],
     size_per_term: int = 10,
+    page: int = 1,
     resource_type: str | None = None,
 ) -> list[CandidateRecord]:
     cleaned_terms = [term.strip() for term in terms if term.strip()]
     if not cleaned_terms:
         raise ValueError("semantic_search requires at least one non-empty term")
+    if page < 1:
+        raise ValueError("page must be at least 1")
 
     candidates: dict[str, CandidateRecord] = {}
 
     for term in cleaned_terms:
-        response = client.search(term, size=size_per_term, resource_type=resource_type)
+        response = client.search(
+            term,
+            size=size_per_term,
+            page=page,
+            resource_type=resource_type,
+        )
 
         for hit in response.hits:
             record_id = hit.get("id")
