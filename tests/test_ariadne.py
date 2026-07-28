@@ -89,6 +89,21 @@ def test_search_maps_dating_resource_type_alias_to_date() -> None:
     assert seen_request.url.params["ariadneSubject"] == "Date"
 
 
+def test_search_sends_period_filter_as_temporal() -> None:
+    seen_request = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal seen_request
+        seen_request = request
+        return httpx.Response(200, json={"total": {}, "hits": [], "aggregations": []})
+
+    client = make_client(handler)
+    client.search("radiocarbon", period="Late Neolithic")
+
+    assert seen_request is not None
+    assert seen_request.url.params["temporal"] == "late neolithic"
+
+
 def test_search_rejects_missing_hits() -> None:
     client = make_client(lambda request: httpx.Response(200, json={"total": {}}))
 

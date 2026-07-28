@@ -14,13 +14,14 @@ def build_output(
     terms: list[str],
     candidates: list[CandidateRecord],
     resource_type: str | None = None,
+    period: str | None = None,
     page: int = 1,
     size_per_term: int = 5,
 ) -> dict[str, Any]:
     return {
         "query": query,
         "expanded_terms": terms,
-        "filters": {"resource_type": resource_type},
+        "filters": {"resource_type": resource_type, "period": period},
         "pagination": {"page": page, "size_per_term": size_per_term},
         "candidate_count": len(candidates),
         "candidates": [candidate.model_dump() for candidate in candidates],
@@ -49,6 +50,10 @@ def main(argv: list[str] | None = None) -> int:
         "--resource-type",
         help="ARIADNE resource type filter, e.g. Date or Site/monument",
     )
+    parser.add_argument(
+        "--period",
+        help="ARIADNE temporal period filter, e.g. neolithic or late neolithic",
+    )
     args = parser.parse_args(argv)
 
     terms = [args.query, *args.expand]
@@ -61,6 +66,7 @@ def main(argv: list[str] | None = None) -> int:
             size_per_term=args.size,
             page=args.page,
             resource_type=args.resource_type,
+            period=args.period,
         )
     except (AriadneError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -73,6 +79,7 @@ def main(argv: list[str] | None = None) -> int:
                 terms,
                 candidates,
                 resource_type=args.resource_type,
+                period=args.period,
                 page=args.page,
                 size_per_term=args.size,
             ),

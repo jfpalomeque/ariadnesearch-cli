@@ -47,10 +47,13 @@ class AriadneClient:
         size: int = 10,
         page: int = 1,
         resource_type: str | None = None,
+        period: str | None = None,
     ) -> SearchResponse:
         params: dict[str, Any] = {"q": query.lower(), "size": size, "page": page}
         if resource_type:
             params["ariadneSubject"] = normalise_resource_type(resource_type)
+        if period:
+            params["temporal"] = normalise_period(period)
 
         data = self._get_json(
             "/search",
@@ -104,3 +107,7 @@ class AriadneClient:
 def normalise_resource_type(resource_type: str) -> str:
     stripped = resource_type.strip()
     return RESOURCE_TYPE_ALIASES.get(stripped.lower(), stripped)
+
+
+def normalise_period(period: str) -> str:
+    return period.strip().lower()
