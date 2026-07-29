@@ -2,6 +2,10 @@
 
 Minimal prototype for transparent ARIADNE catalogue search.
 
+## Output Shape
+
+Candidate records lift a small set of common ARIADNE metadata into top-level fields for convenience, including `countries` and `temporal_periods`. The original ARIADNE search hit is preserved unchanged under `raw`.
+
 ## Resource Type Values
 
 The probe supports ARIADNE resource-type filtering with `--resource-type`, which maps to the ARIADNE API parameter `ariadneSubject`.

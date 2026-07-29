@@ -123,6 +123,9 @@ def test_semantic_search_extracts_stable_fields_and_preserves_raw() -> None:
             "description": {"text": "A description"},
             "resourceType": "collection",
             "identifier": "https://example.test/source",
+            "country": [{"name": "England"}, {"name": "Wales"}],
+            "temporal": [{"periodName": "neolithic"}],
+            "nativePeriod": [{"periodName": "late neolithic"}],
             "extra": {"kept": True},
         },
     }
@@ -135,7 +138,26 @@ def test_semantic_search_extracts_stable_fields_and_preserves_raw() -> None:
     assert candidate.description == "A description"
     assert candidate.resource_type == "collection"
     assert candidate.source_identifier == "https://example.test/source"
+    assert candidate.countries == ["England", "Wales"]
+    assert candidate.temporal_periods == ["neolithic", "late neolithic"]
     assert candidate.raw == hit
+
+
+def test_semantic_search_skips_malformed_country_and_period_values() -> None:
+    hit = {
+        "id": "abc",
+        "data": {
+            "country": [{"label": "missing name"}, " Scotland ", ""],
+            "temporal": [{"periodName": "roman"}, {"periodName": "roman"}],
+            "nativePeriod": [None, {"label": "missing period"}, " medieval "],
+        },
+    }
+    client = FakeClient({"radiocarbon": [hit]})
+
+    [candidate] = semantic_search(client, ["radiocarbon"])
+
+    assert candidate.countries == ["Scotland"]
+    assert candidate.temporal_periods == ["roman", "medieval"]
 
 
 def test_semantic_search_skips_hits_without_id() -> None:

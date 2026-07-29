@@ -17,6 +17,8 @@ class CandidateRecord(BaseModel):
     description: str | None = None
     resource_type: str | None = None
     source_identifier: str | None = None
+    countries: list[str] = Field(default_factory=list)
+    temporal_periods: list[str] = Field(default_factory=list)
     matched_terms: list[str] = Field(default_factory=list)
     raw: dict[str, Any] = Field(default_factory=dict)
 
@@ -82,6 +84,47 @@ def _normalise_hit(hit: dict[str, Any], matched_term: str) -> CandidateRecord:
         description=description.get("text"),
         resource_type=data.get("resourceType"),
         source_identifier=data.get("identifier"),
+        countries=_extract_country_names(data),
+        temporal_periods=_extract_period_names(data),
         matched_terms=[matched_term],
         raw=hit,
     )
+
+
+def _extract_country_names(data: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    countries = data.get("country")
+    if not isinstance(countries, list):
+        return values
+
+    for country in countries:
+        if isinstance(country, dict):
+            _append_unique(values, country.get("name"))
+        else:
+            _append_unique(values, country)
+
+    return values
+
+
+def _extract_period_names(data: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+
+    for field_name in ("temporal", "nativePeriod"):
+        periods = data.get(field_name)
+        if not isinstance(periods, list):
+            continue
+
+        for period in periods:
+            if isinstance(period, dict):
+                _append_unique(values, period.get("periodName"))
+            else:
+                _append_unique(values, period)
+
+    return values
+
+
+def _append_unique(values: list[str], value: Any) -> None:
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped and stripped not in values:
+            values.append(stripped)

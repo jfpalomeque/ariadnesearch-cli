@@ -29,6 +29,8 @@ def test_build_output_serialises_candidates() -> None:
                 "description": None,
                 "resource_type": None,
                 "source_identifier": None,
+                "countries": [],
+                "temporal_periods": [],
                 "matched_terms": ["radiocarbon"],
                 "raw": {"id": "abc"},
             }
