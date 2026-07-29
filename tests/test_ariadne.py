@@ -104,6 +104,21 @@ def test_search_sends_period_filter_as_temporal() -> None:
     assert seen_request.url.params["temporal"] == "late neolithic"
 
 
+def test_search_sends_country_filter() -> None:
+    seen_request = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal seen_request
+        seen_request = request
+        return httpx.Response(200, json={"total": {}, "hits": [], "aggregations": []})
+
+    client = make_client(handler)
+    client.search("radiocarbon", country=" England ")
+
+    assert seen_request is not None
+    assert seen_request.url.params["country"] == "England"
+
+
 def test_search_rejects_missing_hits() -> None:
     client = make_client(lambda request: httpx.Response(200, json={"total": {}}))
 

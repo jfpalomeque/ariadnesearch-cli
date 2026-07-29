@@ -9,7 +9,7 @@ from archsearch.semantic import semantic_search
 class FakeClient:
     def __init__(self, responses: dict[str, list[dict]]) -> None:
         self.responses = responses
-        self.calls: list[tuple[str, int, int, str | None, str | None]] = []
+        self.calls: list[tuple[str, int, int, str | None, str | None, str | None]] = []
 
     def search(
         self,
@@ -18,8 +18,9 @@ class FakeClient:
         page: int = 1,
         resource_type: str | None = None,
         period: str | None = None,
+        country: str | None = None,
     ) -> SearchResponse:
-        self.calls.append((query, size, page, resource_type, period))
+        self.calls.append((query, size, page, resource_type, period, country))
         hits = self.responses.get(query, [])
         return SearchResponse(total={"value": len(hits), "relation": "eq"}, hits=hits)
 
@@ -29,7 +30,10 @@ def test_semantic_search_runs_one_search_per_non_empty_term() -> None:
 
     semantic_search(client, ["radiocarbon", "", " C14 "], size_per_term=3)
 
-    assert client.calls == [("radiocarbon", 3, 1, None, None), ("C14", 3, 1, None, None)]
+    assert client.calls == [
+        ("radiocarbon", 3, 1, None, None, None),
+        ("C14", 3, 1, None, None, None),
+    ]
 
 
 def test_semantic_search_passes_page_to_each_term() -> None:
@@ -37,7 +41,10 @@ def test_semantic_search_passes_page_to_each_term() -> None:
 
     semantic_search(client, ["radiocarbon", "C14"], size_per_term=5, page=3)
 
-    assert client.calls == [("radiocarbon", 5, 3, None, None), ("C14", 5, 3, None, None)]
+    assert client.calls == [
+        ("radiocarbon", 5, 3, None, None, None),
+        ("C14", 5, 3, None, None, None),
+    ]
 
 
 def test_semantic_search_passes_resource_type_to_each_term() -> None:
@@ -50,7 +57,10 @@ def test_semantic_search_passes_resource_type_to_each_term() -> None:
         resource_type="Date",
     )
 
-    assert client.calls == [("radiocarbon", 3, 1, "Date", None), ("C14", 3, 1, "Date", None)]
+    assert client.calls == [
+        ("radiocarbon", 3, 1, "Date", None, None),
+        ("C14", 3, 1, "Date", None, None),
+    ]
 
 
 def test_semantic_search_passes_period_to_each_term() -> None:
@@ -63,7 +73,26 @@ def test_semantic_search_passes_period_to_each_term() -> None:
         period="neolithic",
     )
 
-    assert client.calls == [("radiocarbon", 3, 1, None, "neolithic"), ("C14", 3, 1, None, "neolithic")]
+    assert client.calls == [
+        ("radiocarbon", 3, 1, None, "neolithic", None),
+        ("C14", 3, 1, None, "neolithic", None),
+    ]
+
+
+def test_semantic_search_passes_country_to_each_term() -> None:
+    client = FakeClient({"radiocarbon": [], "C14": []})
+
+    semantic_search(
+        client,
+        ["radiocarbon", "C14"],
+        size_per_term=3,
+        country="England",
+    )
+
+    assert client.calls == [
+        ("radiocarbon", 3, 1, None, None, "England"),
+        ("C14", 3, 1, None, None, "England"),
+    ]
 
 
 def test_semantic_search_deduplicates_and_records_matched_terms() -> None:

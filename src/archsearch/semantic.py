@@ -28,6 +28,7 @@ def semantic_search(
     page: int = 1,
     resource_type: str | None = None,
     period: str | None = None,
+    country: str | None = None,
 ) -> list[CandidateRecord]:
     cleaned_terms = [term.strip() for term in terms if term.strip()]
     if not cleaned_terms:
@@ -44,6 +45,7 @@ def semantic_search(
             page=page,
             resource_type=resource_type,
             period=period,
+            country=country,
         )
 
         for hit in response.hits:

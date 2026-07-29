@@ -72,3 +72,31 @@ later prehistoric
 The ARIADNE temporal filter appears to match exact period facet values. A search for `--period neolithic` should not be assumed to include records tagged only as `early neolithic`, `middle neolithic`, or `late neolithic`. Some records may still appear in both broad and subperiod searches if their metadata contains both period labels.
 
 If broad Neolithic coverage is important, run separate searches for `neolithic`, `early neolithic`, `middle neolithic`, and `late neolithic`, then compare or merge the candidate records.
+
+## Country Filter
+
+The probe supports ARIADNE country/region facet filtering with `--country`, which maps to the ARIADNE API parameter `country`.
+
+Example:
+
+```bash
+python -m archsearch.probe "radiocarbon" --country England --size 5
+```
+
+Country values are sent as exact ARIADNE facet labels after whitespace trimming. They are case-sensitive: for example, `England` returned matches during testing, while `england` returned none. `UK` should not be assumed to match `United Kingdom`.
+
+Observed examples include:
+
+```text
+England
+Scotland
+Wales
+Northern Ireland
+Ireland
+United Kingdom
+Great Britain
+Isle of Man
+Česká republika
+```
+
+This is a catalogue country/region filter, not exact coordinate, bounding-box, or radius search.

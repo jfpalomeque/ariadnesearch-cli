@@ -6,3 +6,6 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
+uv.lock
+ariadne-output.json
+/API_ARGS.md
