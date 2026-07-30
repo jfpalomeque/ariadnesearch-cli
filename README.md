@@ -2,6 +2,28 @@
 
 Minimal prototype for transparent ARIADNE catalogue search.
 
+## CLI
+
+Install locally:
+
+```bash
+python -m pip install -e ".[test]"
+```
+
+Show the bundled agent/human reference:
+
+```bash
+ariadnesearch docs
+```
+
+Search ARIADNE:
+
+```bash
+ariadnesearch search "radiocarbon" --country England --size 5
+```
+
+Search results are JSON on stdout. Errors are written to stderr. Full supported arguments, known values, output fields, and caveats are documented by `ariadnesearch docs`.
+
 ## Output Shape
 
 Candidate records lift a small set of common ARIADNE metadata into top-level fields for convenience, including `countries` and `temporal_periods`. The original ARIADNE search hit is preserved unchanged under `raw`.
