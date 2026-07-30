@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from archsearch.ariadne import AriadneClient
+from ariadnesearch.ariadne import AriadneClient
 
 
 PORTAL_RESOURCE_URL = "https://portal.ariadne-infrastructure.eu/resource"

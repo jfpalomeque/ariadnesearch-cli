@@ -3,7 +3,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from archsearch.ariadne import AriadneClient, AriadneNetworkError, AriadneResponseError
+from ariadnesearch.ariadne import AriadneClient, AriadneNetworkError, AriadneResponseError
 
 
 def make_client(handler):

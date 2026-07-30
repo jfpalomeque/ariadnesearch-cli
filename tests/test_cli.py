@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 
-from archsearch import cli
-from archsearch.semantic import CandidateRecord
+from ariadnesearch import cli
+from ariadnesearch.semantic import CandidateRecord
 
 
 def test_docs_prints_reference(capsys) -> None:

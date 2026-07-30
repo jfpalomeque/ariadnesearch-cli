@@ -6,8 +6,8 @@ import sys
 from importlib.resources import files
 from typing import Any
 
-from archsearch.ariadne import AriadneClient, AriadneError
-from archsearch.semantic import CandidateRecord, semantic_search
+from ariadnesearch.ariadne import AriadneClient, AriadneError
+from ariadnesearch.semantic import CandidateRecord, semantic_search
 
 
 DOCS_FILE = "ARIADNESEARCH_USAGE.md"
@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def run_docs() -> int:
-    docs = files("archsearch").joinpath(DOCS_FILE).read_text(encoding="utf-8")
+    docs = files("ariadnesearch").joinpath(DOCS_FILE).read_text(encoding="utf-8")
     _write_stdout(docs)
     return 0
 

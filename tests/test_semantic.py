@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from archsearch.ariadne import SearchResponse
-from archsearch.semantic import semantic_search
+from ariadnesearch.ariadne import SearchResponse
+from ariadnesearch.semantic import semantic_search
 
 
 class FakeClient:

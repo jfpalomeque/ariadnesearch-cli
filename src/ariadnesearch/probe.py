@@ -5,8 +5,8 @@ import json
 import sys
 from typing import Any
 
-from archsearch.ariadne import AriadneClient, AriadneError
-from archsearch.semantic import CandidateRecord, semantic_search
+from ariadnesearch.ariadne import AriadneClient, AriadneError
+from ariadnesearch.semantic import CandidateRecord, semantic_search
 
 
 def build_output(

@@ -1,4 +1,4 @@
-# Semantic CLI
+# ariadnesearch-cli
 
 Minimal prototype for transparent ARIADNE catalogue search.
 
@@ -35,7 +35,7 @@ The probe supports ARIADNE resource-type filtering with `--resource-type`, which
 Example:
 
 ```bash
-python -m archsearch.probe "radiocarbon" --resource-type Date --size 5
+python -m ariadnesearch.probe "radiocarbon" --resource-type Date --size 5
 ```
 
 Current observed `ariadneSubject` values from the live ARIADNE aggregation endpoint:
@@ -70,7 +70,7 @@ The probe supports ARIADNE temporal period filtering with `--period`, which maps
 Example:
 
 ```bash
-python -m archsearch.probe "radiocarbon" --period neolithic --size 5
+python -m ariadnesearch.probe "radiocarbon" --period neolithic --size 5
 ```
 
 Period values are sent to ARIADNE in lowercase because observed API behavior is case-sensitive. For example, `temporal=neolithic` returns matches, while `temporal=Neolithic` returned none during testing.
@@ -106,7 +106,7 @@ The probe supports ARIADNE country/region facet filtering with `--country`, whic
 Example:
 
 ```bash
-python -m archsearch.probe "radiocarbon" --country England --size 5
+python -m ariadnesearch.probe "radiocarbon" --country England --size 5
 ```
 
 Country values are sent as exact ARIADNE facet labels after whitespace trimming. They are case-sensitive: for example, `England` returned matches during testing, while `england` returned none. `UK` should not be assumed to match `United Kingdom`.

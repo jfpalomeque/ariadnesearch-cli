@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from archsearch.probe import build_output
-from archsearch.semantic import CandidateRecord
+from ariadnesearch.probe import build_output
+from ariadnesearch.semantic import CandidateRecord
 
 
 def test_build_output_serialises_candidates() -> None:
