@@ -31,6 +31,64 @@ ariadnesearch search "radiocarbon" --country England --size 5
 
 Search results are JSON on stdout. Errors go to stderr. To see all arguments, filters and output fields, run `ariadnesearch docs`.
 
+## Commands and options
+
+`ariadnesearch search QUERY [options]` searches the catalogue. Quote multi-word terms or filter values. `ariadnesearch docs` prints the bundled Markdown reference offline. Use `-h` or `--help` after the executable or either subcommand for command-line help.
+
+| Search argument | Default | Meaning |
+| --- | --- | --- |
+| `QUERY` | Required | Free-text search term, lowercased before the request. |
+| `--expand TERM` | None | Search an additional term. Repeat the flag for more terms. |
+| `--size N` | `5` | Number of records requested per term. |
+| `--page N` | `1` | Page to request for each term, starting at 1. |
+| `--resource-type TYPE` | Unfiltered | ARIADNE subject facet, such as `Date` or `Site/monument`. The CLI accepts `Dating` as an alias for `Date`. |
+| `--period PERIOD` | Unfiltered | Temporal facet, lowercased before the request, such as `"late neolithic"`. |
+| `--country COUNTRY` | Unfiltered | Exact, case-sensitive country or region label, such as `England`. |
+
+```bash
+ariadnesearch search "radiocarbon" --expand C14 --country England --resource-type Date --period neolithic --size 5 --page 2
+```
+
+## Search output
+
+A successful search writes one JSON object to stdout and exits with code 0, including when there are no matches. Errors go to stderr with a non-zero exit code. To save the complete response, append `> results.json` to the command.
+
+The example below uses a fictional record to show every output field.
+
+```json
+{
+  "command": "search",
+  "query": "radiocarbon",
+  "expanded_terms": ["radiocarbon", "C14"],
+  "filters": {"resource_type": null, "period": null, "country": null},
+  "pagination": {"page": 1, "size_per_term": 5},
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "id": "example-id",
+      "portal_url": "https://portal.ariadne-infrastructure.eu/resource/example-id",
+      "title": "Example radiocarbon date",
+      "description": null,
+      "resource_type": "dataset",
+      "source_identifier": null,
+      "countries": [],
+      "temporal_periods": [],
+      "matched_terms": ["C14"],
+      "raw": {
+        "id": "example-id",
+        "data": {"title": {"text": "Example radiocarbon date"}, "resourceType": "dataset"}
+      }
+    }
+  ]
+}
+```
+
+`expanded_terms` lists the original query and any terms supplied with `--expand`. Each term gets its own request for the selected page. The CLI merges hits with the same `id`, and `matched_terms` records which term searches returned each candidate.
+
+`candidate_count` is the length of `candidates` after merging. With several terms it can exceed `size_per_term`. The CLI omits the catalogue-wide match total. An empty result has `"candidate_count": 0` and `"candidates": []`.
+
+`portal_url` links to the ARIADNE record. `source_identifier` comes from the record’s own identifier field. Missing optional text values appear as `null`, and missing country or period lists appear as `[]`. The `raw` object preserves the original ARIADNE hit, including metadata beyond the fields extracted by the CLI.
+
 ## Development and tests
 
 To change the CLI or run its tests, clone the repository and enter the project directory.
@@ -57,10 +115,6 @@ Run the suite after changing the client or CLI to catch regressions before other
 | `tests/test_semantic.py` | Combining search terms, merging duplicate records and extracting metadata |
 | `tests/test_cli.py` | The public command’s JSON output, error messages and bundled documentation |
 | `tests/test_probe.py` | The original probe’s output format, filters and pagination fields |
-
-## Output Shape
-
-Candidate records lift a small set of common ARIADNE metadata into top-level fields for convenience, including `countries` and `temporal_periods`. The original ARIADNE search hit is preserved unchanged under `raw`.
 
 ## Resource Type Values
 
