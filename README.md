@@ -2,9 +2,22 @@
 
 Minimal prototype for transparent ARIADNE catalogue search.
 
-## Quick start
+## Install and use the CLI
 
-With Python 3.11 or later and Git installed, run this in an active virtual environment.
+Install Python 3.11 or later and Git. In a terminal, create a virtual environment to keep the CLI and its dependencies separate from other Python projects.
+
+```bash
+python -m venv .venv
+```
+
+Activate the environment with the command for your shell.
+
+| Shell | Command |
+| --- | --- |
+| Windows PowerShell | `.\.venv\Scripts\Activate.ps1` |
+| macOS or Linux, Bash or Zsh | `source .venv/bin/activate` |
+
+Install the CLI directly from GitHub. This installs the command and its runtime dependencies. The test tools are optional.
 
 ```bash
 python -m pip install "git+https://github.com/jfpalomeque/ariadnesearch-cli.git"
@@ -18,14 +31,32 @@ ariadnesearch search "radiocarbon" --country England --size 5
 
 Search results are JSON on stdout. Errors go to stderr. To see all arguments, filters and output fields, run `ariadnesearch docs`.
 
-## Development
+## Development and tests
 
-From the root of a local clone, install the editable package and run the tests.
+To change the CLI or run its tests, clone the repository and enter the project directory.
+
+```bash
+git clone https://github.com/jfpalomeque/ariadnesearch-cli.git
+cd ariadnesearch-cli
+```
+
+With a virtual environment active, install the local checkout and its test tools, then run the suite.
 
 ```bash
 python -m pip install -e ".[test]"
 python -m pytest
 ```
+
+The `.` selects the project in the current directory. The `-e` flag makes the install *editable*, so the next time you run `ariadnesearch`, it uses your edited Python files without a reinstall. The `[test]` extra installs `pytest`, the test runner declared in `pyproject.toml`. To work on the CLI without installing pytest, use `python -m pip install -e .`.
+
+Run the suite after changing the client or CLI to catch regressions before others rely on the change. The tests use controlled responses and run offline, so changes in the live catalogue do not affect the results.
+
+| Test file | What it checks |
+| --- | --- |
+| `tests/test_ariadne.py` | API request parameters, filters, response parsing and error handling |
+| `tests/test_semantic.py` | Combining search terms, merging duplicate records and extracting metadata |
+| `tests/test_cli.py` | The public command’s JSON output, error messages and bundled documentation |
+| `tests/test_probe.py` | The original probe’s output format, filters and pagination fields |
 
 ## Output Shape
 
