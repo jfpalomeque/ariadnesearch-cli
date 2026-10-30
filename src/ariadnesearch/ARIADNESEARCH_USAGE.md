@@ -112,7 +112,7 @@ Country values are case-sensitive. During testing, `England` returned matches wh
 
 Successful `search` commands write JSON to stdout and return exit code `0`. Errors are written to stderr and return a non-zero exit code. A successful search with zero candidates still returns exit code `0`.
 
-Search output has this shape:
+This example shows the JSON returned for a search with zero matches.
 
 ```json
 {
@@ -128,7 +128,7 @@ Search output has this shape:
     "page": 1,
     "size_per_term": 10
   },
-  "candidate_count": 1,
+  "candidate_count": 0,
   "candidates": []
 }
 ```

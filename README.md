@@ -2,27 +2,30 @@
 
 Minimal prototype for transparent ARIADNE catalogue search.
 
-## CLI
+## Quick start
 
-Install locally:
-
-```bash
-python -m pip install -e ".[test]"
-```
-
-Show the bundled agent/human reference:
+With Python 3.11 or later and Git installed, run this in an active virtual environment.
 
 ```bash
-ariadnesearch docs
+python -m pip install "git+https://github.com/jfpalomeque/ariadnesearch-cli.git"
 ```
 
-Search ARIADNE:
+Search for up to five catalogue records matching “radiocarbon” in England.
 
 ```bash
 ariadnesearch search "radiocarbon" --country England --size 5
 ```
 
-Search results are JSON on stdout. Errors are written to stderr. Full supported arguments, known values, output fields, and caveats are documented by `ariadnesearch docs`.
+Search results are JSON on stdout. Errors go to stderr. To see all arguments, filters and output fields, run `ariadnesearch docs`.
+
+## Development
+
+From the root of a local clone, install the editable package and run the tests.
+
+```bash
+python -m pip install -e ".[test]"
+python -m pytest
+```
 
 ## Output Shape
 
@@ -30,12 +33,12 @@ Candidate records lift a small set of common ARIADNE metadata into top-level fie
 
 ## Resource Type Values
 
-The probe supports ARIADNE resource-type filtering with `--resource-type`, which maps to the ARIADNE API parameter `ariadneSubject`.
+The CLI supports ARIADNE resource-type filtering with `--resource-type`, which maps to the ARIADNE API parameter `ariadneSubject`.
 
 Example:
 
 ```bash
-python -m ariadnesearch.probe "radiocarbon" --resource-type Date --size 5
+ariadnesearch search "radiocarbon" --resource-type Date --size 5
 ```
 
 Current observed `ariadneSubject` values from the live ARIADNE aggregation endpoint:
@@ -59,18 +62,18 @@ Current observed `ariadneSubject` values from the live ARIADNE aggregation endpo
 | `E-Publication` | 77 |
 | `Not provided` | 32 |
 
-Note: the ARIADNE portal UI labels `Date` as `Dating`. The probe accepts `--resource-type Dating` and sends `Date` to the API.
+Note: the ARIADNE portal UI labels `Date` as `Dating`. The CLI accepts `--resource-type Dating` and sends `Date` to the API.
 
 These are observed catalogue facet values, not a guaranteed permanent vocabulary.
 
 ## Period Filter
 
-The probe supports ARIADNE temporal period filtering with `--period`, which maps to the ARIADNE API parameter `temporal`.
+The CLI supports ARIADNE temporal period filtering with `--period`, which maps to the ARIADNE API parameter `temporal`.
 
 Example:
 
 ```bash
-python -m ariadnesearch.probe "radiocarbon" --period neolithic --size 5
+ariadnesearch search "radiocarbon" --period neolithic --size 5
 ```
 
 Period values are sent to ARIADNE in lowercase because observed API behavior is case-sensitive. For example, `temporal=neolithic` returns matches, while `temporal=Neolithic` returned none during testing.
@@ -101,12 +104,12 @@ If broad Neolithic coverage is important, run separate searches for `neolithic`,
 
 ## Country Filter
 
-The probe supports ARIADNE country/region facet filtering with `--country`, which maps to the ARIADNE API parameter `country`.
+The CLI supports ARIADNE country/region facet filtering with `--country`, which maps to the ARIADNE API parameter `country`.
 
 Example:
 
 ```bash
-python -m ariadnesearch.probe "radiocarbon" --country England --size 5
+ariadnesearch search "radiocarbon" --country England --size 5
 ```
 
 Country values are sent as exact ARIADNE facet labels after whitespace trimming. They are case-sensitive: for example, `England` returned matches during testing, while `england` returned none. `UK` should not be assumed to match `United Kingdom`.
