@@ -126,3 +126,7 @@ Isle of Man
 ```
 
 This is a catalogue country/region filter, not exact coordinate, bounding-box, or radius search.
+
+## Licence
+
+The CLI and its documentation are distributed under the [MIT License](LICENSE). Catalogue records returned by ARIADNE retain their respective rights and licences.

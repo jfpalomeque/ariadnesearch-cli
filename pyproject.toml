@@ -2,6 +2,8 @@
 name = "ariadnesearch-cli"
 version = "0.1.0"
 description = "Prototype for agent-friendly ARIADNE catalogue search"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
   "httpx>=0.27",
@@ -17,7 +19,7 @@ test = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
