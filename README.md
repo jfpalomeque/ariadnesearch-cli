@@ -2,6 +2,8 @@
 
 Minimal prototype for transparent ARIADNE catalogue search.
 
+Developed by [Juan Palomeque-Gonzalez](https://jfpalomeque.com).
+
 ## Install and use the CLI
 
 Install Python 3.11 or later and Git. In a terminal, create a virtual environment to keep the CLI and its dependencies separate from other Python projects.

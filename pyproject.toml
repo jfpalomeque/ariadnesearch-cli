@@ -2,6 +2,8 @@
 name = "ariadnesearch-cli"
 version = "0.1.0"
 description = "Prototype for agent-friendly ARIADNE catalogue search"
+authors = [{ name = "Juan Palomeque-Gonzalez" }]
+readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
@@ -9,6 +11,10 @@ dependencies = [
   "httpx>=0.27",
   "pydantic>=2",
 ]
+
+[project.urls]
+"Author website" = "https://jfpalomeque.com"
+Repository = "https://github.com/jfpalomeque/ariadnesearch-cli"
 
 [project.scripts]
 ariadnesearch = "ariadnesearch.cli:main"
