@@ -23,7 +23,17 @@ class CandidateRecord(BaseModel):
     raw: dict[str, Any] = Field(default_factory=dict)
 
 
-def semantic_search(
+class TermTotal(BaseModel):
+    term: str
+    total: dict[str, Any]
+
+
+class SearchResults(BaseModel):
+    candidates: list[CandidateRecord]
+    totals_by_term: list[TermTotal]
+
+
+def search_terms(
     client: AriadneClient,
     terms: list[str],
     size_per_term: int = 10,
@@ -31,16 +41,22 @@ def semantic_search(
     resource_type: str | None = None,
     period: str | None = None,
     country: str | None = None,
-) -> list[CandidateRecord]:
+    bbox: str | None = None,
+) -> SearchResults:
+    """Union independent catalogue queries; preserve their totals without summing."""
     cleaned_terms = [term.strip() for term in terms if term.strip()]
     if not cleaned_terms:
         raise ValueError("semantic_search requires at least one non-empty term")
     if page < 1:
         raise ValueError("page must be at least 1")
+    if not 1 <= size_per_term <= 50:
+        raise ValueError("size must be between 1 and 50")
 
     candidates: dict[str, CandidateRecord] = {}
+    totals: list[TermTotal] = []
 
     for term in cleaned_terms:
+        bbox_params = {"bbox": bbox} if bbox is not None else {}
         response = client.search(
             term,
             size=size_per_term,
@@ -48,7 +64,9 @@ def semantic_search(
             resource_type=resource_type,
             period=period,
             country=country,
+            **bbox_params,
         )
+        totals.append(TermTotal(term=term, total=response.total))
 
         for hit in response.hits:
             record_id = hit.get("id")
@@ -61,7 +79,23 @@ def semantic_search(
 
             candidates[record_id] = _normalise_hit(hit, term)
 
-    return list(candidates.values())
+    return SearchResults(candidates=list(candidates.values()), totals_by_term=totals)
+
+
+def semantic_search(
+    client: AriadneClient,
+    terms: list[str],
+    size_per_term: int = 10,
+    page: int = 1,
+    resource_type: str | None = None,
+    period: str | None = None,
+    country: str | None = None,
+    bbox: str | None = None,
+) -> list[CandidateRecord]:
+    """Compatibility wrapper: explicit term union, not semantic retrieval."""
+    return search_terms(
+        client, terms, size_per_term, page, resource_type, period, country, bbox
+    ).candidates
 
 
 def _normalise_hit(hit: dict[str, Any], matched_term: str) -> CandidateRecord:

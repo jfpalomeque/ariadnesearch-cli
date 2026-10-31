@@ -9,3 +9,4 @@ __pycache__/
 uv.lock
 ariadne-output.json
 /API_ARGS.md
+/report.md

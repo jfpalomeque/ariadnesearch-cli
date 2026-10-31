@@ -35,21 +35,32 @@ Search results are JSON on stdout. Errors go to stderr. To see all arguments, fi
 
 ## Commands and options
 
-`ariadnesearch search QUERY [options]` searches the catalogue. Quote multi-word terms or filter values. `ariadnesearch docs` prints the bundled Markdown reference offline. Use `-h` or `--help` after the executable or either subcommand for command-line help.
+`ariadnesearch search QUERY [options]` searches the catalogue. Quote multi-word terms or filter values. `ariadnesearch get RECORD_ID` prints the API record JSON, using a search candidate's `id`. `ariadnesearch docs` prints the bundled Markdown reference offline. Use `-h` or `--help` after the executable or any subcommand for command-line help.
 
 | Search argument | Default | Meaning |
 | --- | --- | --- |
 | `QUERY` | Required | Free-text search term, lowercased before the request. |
 | `--expand TERM` | None | Search an additional term. Repeat the flag for more terms. |
-| `--size N` | `5` | Number of records requested per term. |
+| `--size N` | `5` | Number of records requested per term; integer from 1 to 50. Other values are rejected, not clamped. |
 | `--page N` | `1` | Page to request for each term, starting at 1. |
 | `--resource-type TYPE` | Unfiltered | ARIADNE subject facet, such as `Date` or `Site/monument`. The CLI accepts `Dating` as an alias for `Date`. |
 | `--period PERIOD` | Unfiltered | Temporal facet, lowercased before the request, such as `"late neolithic"`. |
 | `--country COUNTRY` | Unfiltered | Exact, case-sensitive country or region label, such as `England`. |
+| `--bbox BOX` | Unfiltered | API bounding box string in `north,west,south,east` order, forwarded unchanged without validation. See warning below. |
 
 ```bash
 ariadnesearch search "radiocarbon" --expand C14 --country England --resource-type Date --period neolithic --size 5 --page 2
+ariadnesearch search "neolithic" --bbox "54.4,-1.8,53.5,-0.4" --size 5
+ariadnesearch get a307b42cbeea146bb1768849482c3a9de38fe2d623c9e2177d2a5388dad9564a
 ```
+
+## Bounding boxes and retrieval limits
+
+**Warning: `--bbox` is pure pass-through, not validated locally.** Supply `north,west,south,east` (NW corner, then SE corner), with `north > south` and `west < east` for ordinary non-antimeridian boxes. Reversed longitudes (`west > east`) trigger antimeridian semantics and can return plausible but incorrect results for the intended area. Do not use them to describe an ordinary box. The CLI does not reorder, trim, or convert the string. Invalid geometry can return a bare JSON array `[]`; this is reported as an error, not as a valid zero-result search.
+
+`bbox` can be combined with text, country, period, resource type, page and size. The caller supplies coordinates and performs any geographic analysis. There is no geocoding, radius search, distance filtering, point-to-box conversion, or semantic retrieval. Flags for `spatial`, `geo`, `lat`, `lon`, `radius` and `within` are not supported.
+
+ARIADNE caps requests at 50 hits and the retrieval window at 10,000 records (`from + size <= 10000`, where `from = (page - 1) × size`). A total above 10,000 does not mean every match can be retrieved. Beyond the window the API can return HTTP 200 with `{"error":{"msg":"Scrolling exceeded maximum"}}`; the CLI reports that server message on stderr and exits non-zero. It does not paginate automatically.
 
 ## Search output
 
@@ -62,8 +73,13 @@ The example below uses a fictional record to show every output field.
   "command": "search",
   "query": "radiocarbon",
   "expanded_terms": ["radiocarbon", "C14"],
-  "filters": {"resource_type": null, "period": null, "country": null},
+  "filters": {"resource_type": null, "period": null, "country": null, "bbox": null},
   "pagination": {"page": 1, "size_per_term": 5},
+  "total": null,
+  "totals_by_term": [
+    {"term": "radiocarbon", "total": {"value": 0, "relation": "eq"}},
+    {"term": "C14", "total": {"value": 1, "relation": "eq"}}
+  ],
   "candidate_count": 1,
   "candidates": [
     {
@@ -87,7 +103,9 @@ The example below uses a fictional record to show every output field.
 
 `expanded_terms` lists the original query and any terms supplied with `--expand`. Each term gets its own request for the selected page. The CLI merges hits with the same `id`, and `matched_terms` records which term searches returned each candidate.
 
-`candidate_count` is the length of `candidates` after merging. With several terms it can exceed `size_per_term`. The CLI omits the catalogue-wide match total. An empty result has `"candidate_count": 0` and `"candidates": []`.
+`candidate_count` is the number of candidates returned by this invocation after deduplication, not the total match count. Before deduplication, up to `size_per_term × number of non-empty terms` hits can be returned, so the candidate count can exceed the page size.
+
+`total` preserves the API total object (including `value` and `relation`) for a single term. With multiple non-empty terms it is `null`: overlapping queries have no known combined total. `totals_by_term` always lists each executed term and its unchanged API total; these totals must not be summed. An empty valid search preserves its zero total and returns `"candidate_count": 0` and `"candidates": []`. Blank terms are skipped; non-empty terms are trimmed before searching and appear that way in `totals_by_term`, while `expanded_terms` echoes the supplied terms.
 
 `portal_url` links to the ARIADNE record. `source_identifier` comes from the record’s own identifier field. Missing optional text values appear as `null`, and missing country or period lists appear as `[]`. The `raw` object preserves the original ARIADNE hit, including metadata beyond the fields extracted by the CLI.
 
@@ -116,7 +134,8 @@ Run the suite after changing the client or CLI to catch regressions before other
 | `tests/test_ariadne.py` | API request parameters, filters, response parsing and error handling |
 | `tests/test_semantic.py` | Combining search terms, merging duplicate records and extracting metadata |
 | `tests/test_cli.py` | The public command’s JSON output, error messages and bundled documentation |
-| `tests/test_probe.py` | The original probe’s output format, filters and pagination fields |
+
+The original `python -m ariadnesearch.probe` entry point has been removed; use `ariadnesearch search` for manual checks. There is only one CLI implementation.
 
 ## Resource Type Values
 

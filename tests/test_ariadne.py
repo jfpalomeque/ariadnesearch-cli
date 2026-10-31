@@ -161,3 +161,40 @@ def test_http_error_becomes_ariadne_network_error() -> None:
 
     with pytest.raises(AriadneNetworkError, match="request failed"):
         client.search("radiocarbon")
+
+
+@pytest.mark.parametrize("bbox", [
+    "54.4,-1.8,53.5,-0.4", " 54.4, -1.8, 53.5, -0.4 ",
+    "54.4,-0.4,53.5,-1.8", "", "invalid",
+])
+def test_bbox_is_passed_through_without_validation(bbox) -> None:
+    def handler(request):
+        assert request.url.params["bbox"] == bbox
+        return httpx.Response(200, json={"total": {"value": 0}, "hits": []})
+
+    make_client(handler).search("neolithic", bbox=bbox)
+
+
+@pytest.mark.parametrize("size", [0, -1, 51, 200])
+def test_search_rejects_invalid_size_before_request(size) -> None:
+    def handler(request):
+        pytest.fail("invalid size must not make a request")
+
+    with pytest.raises(ValueError, match="size must be between 1 and 50"):
+        make_client(handler).search("neolithic", size=size)
+
+
+def test_search_reports_bare_array_as_invalid_response_not_zero_hits() -> None:
+    client = make_client(lambda request: httpx.Response(200, json=[]))
+    with pytest.raises(AriadneResponseError, match="invalid bbox geometry"):
+        client.search("neolithic", bbox="53.5,-1.8,54.4,-0.4")
+
+
+@pytest.mark.parametrize("payload", [
+    {"error": {"msg": "Scrolling exceeded maximum"}},
+    {"error": {"msg": "Scrolling exceeded maximum"}, "hits": []},
+])
+def test_search_reports_server_error_before_checking_hits(payload) -> None:
+    client = make_client(lambda request: httpx.Response(200, json=payload))
+    with pytest.raises(AriadneResponseError, match="ARIADNE API error: Scrolling exceeded maximum"):
+        client.search("neolithic", size=50, page=201)

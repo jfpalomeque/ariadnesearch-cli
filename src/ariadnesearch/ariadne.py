@@ -49,7 +49,10 @@ class AriadneClient:
         resource_type: str | None = None,
         period: str | None = None,
         country: str | None = None,
+        bbox: str | None = None,
     ) -> SearchResponse:
+        if not 1 <= size <= 50:
+            raise ValueError("size must be between 1 and 50")
         params: dict[str, Any] = {"q": query.lower(), "size": size, "page": page}
         if resource_type:
             params["ariadneSubject"] = normalise_resource_type(resource_type)
@@ -57,14 +60,24 @@ class AriadneClient:
             params["temporal"] = normalise_period(period)
         if country:
             params["country"] = normalise_country(country)
+        if bbox is not None:
+            params["bbox"] = bbox
 
         data = self._get_json(
             "/search",
             params=params,
         )
 
+        if data == []:
+            raise AriadneResponseError(
+                "ARIADNE search returned a bare JSON array []; this can indicate invalid bbox geometry"
+            )
         if not isinstance(data, dict):
             raise AriadneResponseError("ARIADNE search response was not a JSON object")
+        if "error" in data:
+            error = data["error"]
+            message = error.get("msg", error) if isinstance(error, dict) else error
+            raise AriadneResponseError(f"ARIADNE API error: {message}")
         if not isinstance(data.get("hits"), list):
             raise AriadneResponseError("ARIADNE search response did not contain a hits list")
 

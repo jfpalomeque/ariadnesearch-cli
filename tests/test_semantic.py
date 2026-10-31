@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from ariadnesearch.ariadne import SearchResponse
-from ariadnesearch.semantic import semantic_search
+from ariadnesearch.semantic import search_terms, semantic_search
 
 
 class FakeClient:
@@ -178,3 +178,31 @@ def test_semantic_search_rejects_page_less_than_one() -> None:
 
     with pytest.raises(ValueError, match="page must be at least 1"):
         semantic_search(client, ["radiocarbon"], page=0)
+
+
+@pytest.mark.parametrize("size", [0, -1, 51, 200])
+def test_term_search_rejects_invalid_size_before_searching(size) -> None:
+    client = FakeClient({})
+    with pytest.raises(ValueError, match="size must be between 1 and 50"):
+        search_terms(client, ["radiocarbon"], size_per_term=size)
+    assert client.calls == []
+
+
+def test_term_search_preserves_totals_and_passes_bbox_to_every_query() -> None:
+    calls = []
+    bbox = "54.4,-0.4,53.5,-1.8"  # Deliberately reversed: pass-through policy.
+    total = {"value": 100, "relation": "gte", "extra": "preserved"}
+
+    class BboxClient:
+        def search(self, term, **kwargs):
+            calls.append((term, kwargs))
+            return SearchResponse(total=total, hits=[{"id": "shared"}])
+
+    result = search_terms(BboxClient(), [" neolithic ", "", " C14 "], bbox=bbox)
+    assert [term for term, _ in calls] == ["neolithic", "C14"]
+    assert all(params["bbox"] == bbox for _, params in calls)
+    assert [item.model_dump() for item in result.totals_by_term] == [
+        {"term": "neolithic", "total": total}, {"term": "C14", "total": total},
+    ]
+    assert len(result.candidates) == 1
+    assert result.candidates[0].matched_terms == ["neolithic", "C14"]
